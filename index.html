@@ -1,0 +1,312 @@
+
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Java script project</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body{
+                background-color: #000000; 
+            }
+        </style>
+    </head>
+    <body>
+        <div style='text-align: center; color: gold; text-transform: capitalize '>
+            <h1>mad jukes</h1>
+        </div>
+        <canvas id="canvas" width="800" height="500" style='display: block; margin: auto;' tabindex="1"></canvas>
+        <script>
+            var WIDTH;
+            var ctx;
+            var HEIGHT;
+            //Cars x and Y postions and the width and height
+            var carX = 400;
+            var carY = 450;
+            var carW = 20;
+            var carH = 20;
+            //Traccfic cars x,y, width, speed and hight positions
+            var tX = 0;
+            var tY = Math.floor((Math.random() * 450) + 1);
+            var tY2 = Math.floor((Math.random() * 450) + 1);
+            var tY3 = Math.floor((Math.random() * 450) + 1);
+            var tW = 90;
+            var tH = 30;
+            var speed = 10;
+            //Traffic cars in the oppsite direction
+            var tX2 = Math.floor((Math.random() * 800) + 1);
+            var tX3 = Math.floor((Math.random() * 800) + 1);
+            var tX4 = Math.floor((Math.random() * 800) + 1);
+            var tY4 = 0;
+            //Movemnet variables
+            var up = false;
+            var down = false;
+            var right = false;
+            var left = false;
+            //hotspot variables
+            var hotX = Math.floor((Math.random() * 750) + 1);
+            var hotY = Math.floor((Math.random() * 450) + 1);
+            var hotW = 50;
+            var hotH = 50;
+            //Score counter
+            var score = 20;
+            //variable to see if the game is over 
+            var gameOver = false;
+            //timers
+            var playTime = 0;
+            var timer = 0;
+            var stopTime = 0;
+            function init() {
+                //get acsess to the canvas
+                ctx = document.getElementById('canvas').getContext('2d');
+                WITDH = ctx.canvas.width;
+                HEIGHT = ctx.canvas.height;
+                ctx.fillStyle = "#00A308";
+                requestAnimationFrame(draw);
+                //displayt the instructions
+                alert("Welcome, please use arrow keys to navigate the player. Watch out for the speeding bricks, you will lose health depending on how bad the hit is. The green spots will help you get more lives. Enjoy!");
+                //Get the dificulty level
+                var level = prompt("What level of dificulty do you want to play with?\n(please input the number of the level)\n1. Easy\n2. Hard \n3. Impossible");
+                //set the speed of the traffic depednig on the level the enter
+        if (level === "1") {
+                    speed = 5;
+                } else if (level === "2") {
+                    speed = 10;
+                } else if (level === "3") {
+                    speed = 15;
+                }
+            }
+            function time() {
+                var sPlayTime = 0;//gets the clocks that run in the top corners
+                timer = 1 / 60;//get the miliseconds
+                if (gameOver === false) {
+                    playTime += timer; //increase it by 1/60 of a second
+                }
+                sPlayTime = playTime.toFixed(3);//round the number to three digits
+                stopTime = sPlayTime;
+                //format the time to 3 decimal places
+                //print the clock in the upper left in blue for P1
+                ctx.fillStyle = "#FFFFFF";
+                ctx.font = "30px Courier";
+                ctx.textAlign = "left";
+                ctx.fillText("Time alive: "+ sPlayTime, 20, 40);
+            }
+            function circle(x, y, r) {
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2, true);
+                ctx.closePath();
+                ctx.fill();
+            }
+            function rect(x, y, w, h) {
+                ctx.beginPath();
+                ctx.rect(x, y, w, h);
+                ctx.closePath();
+                ctx.fill();
+            }
+            function clean() {
+                //Makes the background black
+                ctx.fillStyle = "#4F4F4F";
+                rect(0, 0, 800, 500);
+                //draws the red borders
+                ctx.fillStyle = "#FF280D";
+                rect(0, 0, 10, 500);
+                rect(790, 0, 10, 500);
+                rect(0, 0, 800, 10);
+                rect(0, 490, 800, 10);
+            }
+            function car() {
+                //drwas the player
+                ctx.lineWidth = "2";
+                ctx.fillStyle = "#FFFFFF";
+                rect(carX, carY, carW, carH);
+                ctx.stroke();
+            }
+            function onKeyDown(evt) {
+                //this function cehck when the key is pressed by using key codes
+                //Up
+                if (evt.keyCode === 38) {
+                    up = true;
+                //down    
+                } else if (evt.keyCode === 40) {
+                    down = true;
+                }
+                //right
+                else if (evt.keyCode === 39) {
+                    right = true;
+                //left
+                } else if (evt.keyCode === 37) {
+                    left = true;
+                }
+            }
+            function onKeyUp(evt) {
+                //This means that the keys are not pressed and dont move the object
+                //Up
+                if (evt.keyCode === 38) {
+                    up = false;
+                    //down    
+                } else if (evt.keyCode === 40) {
+                    down = false;
+                }
+                //right
+                else if (evt.keyCode === 39) {
+                    right = false;
+                    //left
+                } else if (evt.keyCode === 37) {
+                    left = false;
+                }
+            }
+            function move() {
+                //moves the car up depending on which direction is intiated
+                //Move up 
+                if (up === true) {
+                    carY = carY - 5;
+                }
+                //Move down
+                if (down === true) {
+                    carY = carY + 5;
+                }
+                //Move right
+                if (right === true) {
+                    carX = carX + 5;
+                }
+                //Move left
+                if (left === true) {
+                    carX = carX - 5;
+                }
+            }
+            function teleport() {
+                //Loops it back if it goes of screen
+                //Stop it from going off screen
+                if (carX >= 800) {
+                    carX = 0;
+                } else if (carX <= 0) {
+                    carX = 800;
+                }
+                if (carY >= 500) {
+                    carY = 0;
+                } else if (carY <= 0) {
+                    carY = 500;
+                }
+            }
+            function hotspot() {
+                //Draws the hotpsot
+                ctx.fillStyle = "#A2FF76";
+                ctx.lineWidth = "2";
+                rect(hotX, hotY, hotW, hotH);
+                ctx.stroke();
+                //If the car intersects the hotspot, change its location to a new random place
+                if (((carX + 10) > hotX) && (carX < (hotX + hotW)) && ((carY + 10) > hotY) && (carY < (hotY + hotH))) {
+                    hotX = Math.floor((Math.random() * 750) + 1);
+                    hotY = Math.floor((Math.random() * 450) + 1);
+                    //Scroe goes up
+                    score += 5;
+                }
+            }
+            function carDetect() {
+                //reduce the score depending on how bad the hit is
+                if (((carX + 20) > tX) && (carX < (tX + tW)) && ((carY + 10) > (tY)) && (carY < (tY + tH))) {
+                    score -= 1;
+                }
+                if (((carX + 20) > tX) && (carX < (tX + tW)) && ((carY + 10) > (tY2)) && (carY < (tY2 + tH))) {
+                    score -= 1;
+                }
+                if (((carX + 20) > tX) && (carX < (tX + tW)) && ((carY + 10) > (tY3)) && (carY < (tY3 + tH))) {
+                    score -= 1;
+                }
+                //Detection for the other traffic
+                if (((carX + 20) > tX2) && (carX < (tX2 + tW)) && ((carY + 10) > (tY4)) && (carY < (tY4 + tH))) {
+                    score -= 1;
+                }
+                if (((carX + 20) > tX3) && (carX < (tX3 + tW)) && ((carY + 10) > (tY4)) && (carY < (tY4 + tH))) {
+                    score -= 1;
+                }
+                if (((carX + 20) > tX4) && (carX < (tX4 + tW)) && ((carY + 10) > (tY4)) && (carY < (tY4 + tH))) {
+                    score -= 1;
+                }
+                if (score <= 0) {
+                    gameOver = true;
+                }
+            }
+            function traffic() {
+                ctx.lineWidth = "2";
+                ctx.fillStyle = "#06B9FF";
+                //Draw the traffic
+                ctx.strokeStyle = "#FFFFFF";
+                rect(tX, tY, tW, tH);
+                ctx.stroke();
+                rect(tX, tY2, tW, tH);
+                ctx.stroke();
+                rect(tX, tY3, tW, tH);
+                ctx.stroke();
+                rect(tX2, tY4, tW, tH);
+                ctx.stroke();
+                rect(tX3, tY4, tW, tH);
+                ctx.stroke();
+                rect(tX4, tY4, tW, tH);
+                ctx.stroke();
+                tY4 += speed;
+                tX += speed;
+                //If it goes of screen then loop it back in a new random place
+                if ((tX) >= 800) {
+                    tX = 0;
+                    tY = Math.floor((Math.random() * 450) + 1);
+                    tY2 = Math.floor((Math.random() * 450) + 1);
+                    tY3 = Math.floor((Math.random() * 450) + 1);
+                }
+                if (tY4 >= 500) {
+                    tY4 = 0;
+                    tX2 = Math.floor((Math.random() * 800) + 1);
+                    tX3 = Math.floor((Math.random() * 800) + 1);
+                    tX4 = Math.floor((Math.random() * 800) + 1);
+                }
+            }
+            function drawScore() {
+                //displays the screen on the side
+                ctx.fillStyle = "#FFFFFF";
+                ctx.font = "30px Courier";
+                ctx.fillText("Score: " + score, 600, 470);
+            }
+            function Over() {
+                //displays the game over messages
+                ctx.fillStyle = "#FFFFFF";
+                ctx.font = "50px Courier";
+                ctx.fillText("Game over", 270, 250);
+                ctx.fillText("Press F5 to play again!", 70, 350);
+                ctx.fillStyle = "#FFFFFF";
+                ctx.font = "30px Courier";
+                ctx.textAlign = "left";
+                ctx.fillText("Time alive: "+stopTime, 20, 40);
+            }
+            function draw() {
+                //drwas the begining screen
+                clean();
+                //if the game is over then display the over messages
+                if (gameOver) {
+                    Over();
+                } else {
+                    //add the other objects in the back
+                    time();
+                    move();
+                    hotspot();
+                    car();
+                    traffic();
+                    teleport();
+                    carDetect();
+                    drawScore();
+                }
+                requestAnimationFrame(draw);
+            }
+            window.addEventListener("load", init, false);
+            //give the canvas focus
+            document.getElementById('canvas').focus();
+            //call the key press functions when keys are pressed
+            window.addEventListener("keydown", onKeyDown, false);
+            window.addEventListener("keyup", onKeyUp, false);
+        </script>
+    </body>
+</html>
